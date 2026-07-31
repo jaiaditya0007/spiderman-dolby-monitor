@@ -15,8 +15,8 @@ STATE_FILE = "state_alus.json"
 
 MAX_RUNTIME_SECONDS = (5 * 3600) + (55 * 60)
 
-# WARP only on GitHub cloud, not on laptop
-USE_WARP = True if os.getenv("GITHUB_ACTIONS") else False
+# Start direct (no WARP). Only switch to WARP on-demand when rate limited.
+USE_WARP = False
 
 PROXIES = {
     "http": "socks5://127.0.0.1:40000",
@@ -62,10 +62,9 @@ SLEEP_BETWEEN_CYCLES   = 120  # seconds after all sessions done
 # ================================================================
 
 def quiet_git_pull():
-    subprocess.run(
-        ["git", "pull", "origin", "main", "--rebase"],
-        capture_output=True, text=True, check=False
-    )
+    """Force local to exactly match remote. Wipes any bad local state to prevent JSON conflicts."""
+    subprocess.run(["git", "fetch", "origin", "main"], capture_output=True, check=False)
+    subprocess.run(["git", "reset", "--hard", "origin/main"], capture_output=True, check=False)
 
 def quiet_git_push():
     res = subprocess.run(
@@ -74,8 +73,8 @@ def quiet_git_push():
     )
     return res.returncode == 0
 
-def load_state():
-    quiet_git_pull()
+def read_local_state():
+    """Reads the JSON from disk without touching Git."""
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, "r") as f:
@@ -84,33 +83,48 @@ def load_state():
             return {}
     return {}
 
-def save_state(state, commit_msg="Update ALUS state"):
+def load_state():
+    """Syncs with remote and loads the freshest state into memory."""
     quiet_git_pull()
-    with open(STATE_FILE, "w") as f:
-        json.dump(state, f, indent=2)
+    return read_local_state()
 
-    subprocess.run(
-        ["git", "add", STATE_FILE],
-        capture_output=True, check=False
-    )
-    status = subprocess.run(
-        ["git", "status", "--porcelain"],
-        capture_output=True, text=True
-    )
+def save_state(deltas, commit_msg="Update ALUS state"):
+    """
+    Merges only the sessions that changed this cycle (deltas) into the absolute
+    latest remote state, then pushes. Retries the merge if another run pushed first.
+    Returns the freshly merged state so the caller's in-memory copy stays correct.
+    """
+    for attempt in range(3):
+        quiet_git_pull()
+        latest_state = read_local_state()
 
-    if STATE_FILE in status.stdout:
-        print(f"[GIT] Committing {STATE_FILE}...")
-        subprocess.run(
-            ["git", "commit", "-m", commit_msg],
-            capture_output=True, check=False
+        for s_id, s_data in deltas.items():
+            latest_state[s_id] = s_data
+
+        with open(STATE_FILE, "w") as f:
+            json.dump(latest_state, f, indent=2)
+
+        subprocess.run(["git", "add", STATE_FILE], capture_output=True, check=False)
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True
         )
-        for attempt in range(3):
+
+        if STATE_FILE in status.stdout:
+            print(f"[GIT] Committing {STATE_FILE} (attempt {attempt+1})...")
+            subprocess.run(["git", "commit", "-m", commit_msg], capture_output=True, check=False)
             if quiet_git_push():
                 print(f"[GIT] Pushed successfully.")
-                break
-            print(f"[GIT] Push attempt {attempt+1} failed. Retrying...")
-            time.sleep(2)
-            quiet_git_pull()
+                return latest_state
+            else:
+                print(f"[GIT] Push attempt {attempt+1} failed (likely concurrent push). Retrying merge...")
+                time.sleep(2)
+        else:
+            print("[GIT] Merged state identical to remote. Nothing to push.")
+            return latest_state
+
+    print("[GIT] Failed to push after 3 attempts. Local memory updated with last known merge.")
+    return latest_state
 
 # ================================================================
 # NOTIFICATIONS
@@ -384,7 +398,7 @@ def main():
         print(f"{'='*52}")
 
         state = load_state()
-        state_changed = False
+        deltas = {}
 
         for index, session in enumerate(target_sessions, 1):
             s_id        = session["sessionId"]
@@ -450,13 +464,13 @@ def main():
 
                 state[s_id]["rows"]  = current_seats
                 state[s_id]["total"] = current_total
-                state_changed = True
+                deltas[s_id] = state[s_id]
 
             elif newly_unblocked > 0 and is_first_run:
                 print(f"    -> First run — {newly_unblocked} seats noted (no alert).")
                 state[s_id]["rows"]  = current_seats
                 state[s_id]["total"] = current_total
-                state_changed = True
+                deltas[s_id] = state[s_id]
 
             elif current_total > prev_total and not is_first_run:
                 delta    = current_total - prev_total
@@ -476,19 +490,20 @@ def main():
 
                 state[s_id]["rows"]  = current_seats
                 state[s_id]["total"] = current_total
-                state_changed = True
+                deltas[s_id] = state[s_id]
 
             elif current_total < prev_total:
                 print(f"    -> Seats booked: {prev_total} -> {current_total}")
                 state[s_id]["rows"]  = current_seats
                 state[s_id]["total"] = current_total
-                state_changed = True
+                deltas[s_id] = state[s_id]
 
             else:
                 print(f"    -> No change ({current_total} seats).")
 
-        if state_changed:
-            save_state(state, f"ALUS Dolby cycle {cycle_count}")
+        if deltas:
+            print("\n[STATE] Cycle finished. Changes detected, merging and saving to Git...")
+            state = save_state(deltas, f"ALUS Dolby cycle {cycle_count}")
         else:
             print(f"\n[STATE] No changes this cycle.")
 
