@@ -1,0 +1,59 @@
+name: Spider-Man Dolby Allu Cinemas Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  poll-bms:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Python Dependencies
+        run: pip install requests curl-cffi
+
+      - name: Configure Git User
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global pull.rebase true
+
+      - name: Install and Setup Cloudflare WARP
+        run: |
+          curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+          sudo apt-get update
+          sudo apt-get install cloudflare-warp -y
+          warp-cli --accept-tos registration new
+          warp-cli --accept-tos mode proxy
+          warp-cli --accept-tos connect
+          sleep 5
+          warp-cli --accept-tos status
+          curl -x socks5://127.0.0.1:40000 https://1.1.1.1/cdn-cgi/trace | grep warp || echo "WARP test failed but continuing..."
+
+      - name: Run Spider-Man Dolby Monitor
+        env:
+          GITHUB_ACTIONS: "true"
+        run: python -u alus.py
+
+      - name: Save State to Repository
+        if: always()
+        run: |
+          git add state_alus.json || true
+          git diff --staged --quiet || git commit -m "alus state [skip ci]"
+          git push || true
