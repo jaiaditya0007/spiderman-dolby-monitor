@@ -8,16 +8,17 @@ import subprocess
 from datetime import datetime
 
 # --- CONFIGURATION ---
+#DATES = ["20260730", "20260731", "20260801", "20260802"]
 DATES = ["20260801", "20260807", "20260808", "20260809"]
 VENUE_CODE = "ALUC"
 EVENT_CODE = "ET00502689"
 STATE_FILE = "state_alus.json"
+MAX_RUNTIME_SECONDS = (5 * 3600) + (55 * 60) # 5 hours 55 mins
 
-MAX_RUNTIME_SECONDS = (5 * 3600) + (55 * 60)
-
-# Start direct (no WARP). Only switch to WARP on-demand when rate limited.
+# Track WARP State natively
 USE_WARP = False
 
+# Cloudflare WARP local proxy
 PROXIES = {
     "http": "socks5://127.0.0.1:40000",
     "https": "socks5://127.0.0.1:40000"
@@ -47,30 +48,25 @@ POST_HEADERS = {
     "Accept-Encoding": "gzip, deflate"
 }
 
-# Exact label confirmed from diagnostic
-SCREEN_LABEL = "DOLBY CINEMA"
+def humanize_date(date_str):
+    dt = datetime.strptime(date_str, "%Y%m%d")
+    day = dt.day
 
-# Your ntfy topic
-NTFY_TOPIC = "spiderman_prasads_730"
-
-# Sleep settings
-SLEEP_BETWEEN_SESSIONS = 45   # seconds between each session
-SLEEP_BETWEEN_CYCLES   = 120  # seconds after all sessions done
-
-# ================================================================
-# GIT FUNCTIONS
-# ================================================================
+    if 11 <= (day % 100) <= 13:
+        suffix = 'th'
+    else:
+        suffix = ['th', 'st', 'nd', 'rd', 'th'][min(day % 10, 4)]
+        
+    month_name = dt.strftime("%B")
+    return f"{day}{suffix} {month_name}"
 
 def quiet_git_pull():
-    """Force local to exactly match remote. Wipes any bad local state to prevent JSON conflicts."""
+    """Fetches and hard resets to exactly match remote. Wipes any failed local commits to prevent JSON merge conflicts."""
     subprocess.run(["git", "fetch", "origin", "main"], capture_output=True, check=False)
     subprocess.run(["git", "reset", "--hard", "origin/main"], capture_output=True, check=False)
 
 def quiet_git_push():
-    res = subprocess.run(
-        ["git", "push", "origin", "main"],
-        capture_output=True, text=True, check=False
-    )
+    res = subprocess.run(["git", "push", "origin", "main"], capture_output=True, text=True, check=False)
     return res.returncode == 0
 
 def read_local_state():
@@ -79,7 +75,8 @@ def read_local_state():
         try:
             with open(STATE_FILE, "r") as f:
                 return json.load(f)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            print(f"[STATE] ⚠️ JSON Error reading state: {e}")
             return {}
     return {}
 
@@ -88,436 +85,306 @@ def load_state():
     quiet_git_pull()
     return read_local_state()
 
-def save_state(deltas, commit_msg="Update ALUS state"):
+def save_state(deltas, commit_msg="Update seat state"):
     """
-    Merges only the sessions that changed this cycle (deltas) into the absolute
-    latest remote state, then pushes. Retries the merge if another run pushed first.
-    Returns the freshly merged state so the caller's in-memory copy stays correct.
+    Takes a dictionary of local session changes (deltas), cleanly merges them with the 
+    absolute latest Git state, and pushes. Retries seamlessly if another runner pushes first.
+    Returns the newly merged state so the runner can update its memory.
     """
     for attempt in range(3):
+        # 1. Force sync local repo with remote (drops any failed local commits from prior attempts)
         quiet_git_pull()
+        
+        # 2. Read the newly synced remote state
         latest_state = read_local_state()
-
+        
+        # 3. Merge our locally tracked changes (deltas) into this state
         for s_id, s_data in deltas.items():
             latest_state[s_id] = s_data
-
+            
+        # 4. Save the merged state to disk
         with open(STATE_FILE, "w") as f:
             json.dump(latest_state, f, indent=2)
-
+            
+        # 5. Commit
         subprocess.run(["git", "add", STATE_FILE], capture_output=True, check=False)
-        status = subprocess.run(
-            ["git", "status", "--porcelain"],
-            capture_output=True, text=True
-        )
-
+        status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
+        
         if STATE_FILE in status.stdout:
-            print(f"[GIT] Committing {STATE_FILE} (attempt {attempt+1})...")
+            print(f"[GIT] Committing changes to {STATE_FILE} (Attempt {attempt+1})...")
             subprocess.run(["git", "commit", "-m", commit_msg], capture_output=True, check=False)
+            
+            # 6. Push
             if quiet_git_push():
-                print(f"[GIT] Pushed successfully.")
+                print(f"[GIT] Successfully pushed merged state to repository.")
                 return latest_state
             else:
                 print(f"[GIT] Push attempt {attempt+1} failed (likely concurrent push). Retrying merge...")
                 time.sleep(2)
         else:
-            print("[GIT] Merged state identical to remote. Nothing to push.")
+            print("[GIT] Merged state is identical to remote. Nothing to push.")
             return latest_state
-
-    print("[GIT] Failed to push after 3 attempts. Local memory updated with last known merge.")
+            
+    print("[GIT] ❌ Failed to push after 3 attempts. Local memory updated with last known merge.")
     return latest_state
 
-# ================================================================
-# NOTIFICATIONS
-# ================================================================
-
-def trigger_ntfy(title, message):
-    print(f"\n{'='*52}")
-    print(f"  ALERT: {title}")
-    print(f"  {message}")
-    print(f"{'='*52}")
-
-    for i in range(3):
+def trigger_ntfy(message):
+    print(f"\n[!] ALERTING VIA NTFY: {message}")
+    for i in range(1):
         try:
             resp = requests.post(
-                f"https://ntfy.sh/alusdolby",
-                data=message.encode("utf-8"),
-                headers={
-                    "Title":    title,
-                    "Priority": "urgent",
-                    "Tags":     "rotating_light,ticket",
-                },
+                "https://ntfy.sh/alusdolby",
+                data=message.encode('utf-8'),
+                headers={"Priority": "urgent"},
                 timeout=10
             )
-            if resp.status_code == 200:
-                print(f"  -> Alert {i+1}/3 sent! Status: 200")
-            else:
-                print(f"  -> Alert {i+1}/3 status: {resp.status_code}")
+            print(f"    -> Ntfy ping {i+1}/1 sent! Status: {resp.status_code}")
         except Exception as e:
-            print(f"  -> Alert {i+1}/3 failed: {e}")
-        if i < 2:
-            time.sleep(5)
-
-def test_ntfy():
-    print("\n  Sending startup test notification...")
-    try:
-        resp = requests.post(
-            f"https://ntfy.sh/alusdolby",
-            data="Spider-Man Dolby Monitor started at Allu Cinemas Kokapet!".encode("utf-8"),
-            headers={
-                "Title":    "ALUS Dolby Monitor Started",
-                "Priority": "default",
-                "Tags":     "white_check_mark",
-            },
-            timeout=10
-        )
-        if resp.status_code == 200:
-            print(f"  -> Test sent! Check your phone.")
-        else:
-            print(f"  -> Test failed. Status: {resp.status_code}")
-            print(f"  -> Check NTFY_TOPIC = 'alusdolby' is correct.")
-    except Exception as e:
-        print(f"  -> Test error: {e}")
-
-# ================================================================
-# WARP
-# ================================================================
+            print(f"    -> Ntfy ping {i+1} failed: {e}")
 
 def toggle_warp():
+    """Toggles Cloudflare WARP on/off and updates the proxy state."""
     global USE_WARP
     if USE_WARP:
-        print("    -> [WARP] Disconnecting...")
-        subprocess.run(
-            ["warp-cli", "--accept-tos", "disconnect"],
-            capture_output=True, check=False
-        )
+        print("    -> 🚨 [IP ROTATION] WARP is currently ON. Disconnecting WARP (Switching to Runner IP)...")
+        subprocess.run(["warp-cli", "--accept-tos", "disconnect"], capture_output=True, check=False)
         USE_WARP = False
     else:
-        print("    -> [WARP] Connecting...")
-        subprocess.run(
-            ["warp-cli", "--accept-tos", "connect"],
-            capture_output=True, check=False
-        )
-        time.sleep(5)
+        print("    -> 🚨 [IP ROTATION] WARP is currently OFF. Connecting to WARP (Switching to Cloudflare Proxy)...")
+        subprocess.run(["warp-cli", "--accept-tos", "connect"], capture_output=True, check=False)
+        time.sleep(5)  # Wait for the tunnel to establish
         USE_WARP = True
 
-# ================================================================
-# NETWORK
-# ================================================================
-
 def make_bms_request(method, url, max_retries=3, **kwargs):
+    """Network wrapper that intercepts 429s, toggles WARP, and retries the request seamlessly."""
     for attempt in range(1, max_retries + 1):
+        # Dynamically apply proxies only if WARP is ON
         current_proxies = PROXIES if USE_WARP else None
+        
         try:
-            if method.upper() == "GET":
-                resp = cffi_requests.get(
-                    url, proxies=current_proxies,
-                    impersonate="chrome", timeout=15, **kwargs
-                )
+            if method.upper() == 'GET':
+                resp = cffi_requests.get(url, proxies=current_proxies, impersonate="chrome", timeout=15, **kwargs)
             else:
-                resp = cffi_requests.post(
-                    url, proxies=current_proxies,
-                    impersonate="chrome", timeout=15, **kwargs
-                )
-
-            print(f"    -> Status: {resp.status_code} (WARP: {USE_WARP})")
-
-            if resp.status_code == 429:
-                print(f"    -> Rate limited (attempt {attempt}/{max_retries})")
+                resp = cffi_requests.post(url, proxies=current_proxies, impersonate="chrome", timeout=15, **kwargs)
+            
+            print(f"    -> Status: {resp.status_code} (Using WARP: {USE_WARP})")
+            
+            # Catch Rate Limits
+            if resp.status_code in [429,403]:
+                print(f"    -> ⚠️ Rate limited (429) on attempt {attempt}/{max_retries}.")
                 if attempt < max_retries:
                     toggle_warp()
-                    continue
+                    print("    -> Retrying request...")
+                    continue # Retry loop
                 else:
-                    print("    -> Max retries reached.")
-
+                    print("    -> ❌ Max retries reached for this request.")
+            
             return resp
-
+            
         except Exception as e:
-            print(f"    -> Error attempt {attempt}: {e}")
+            print(f"    -> ⚠️ Network exception on attempt {attempt}: {e}")
             if attempt < max_retries:
                 time.sleep(3)
-
+                continue
+    
     return None
-
-# ================================================================
-# BMS DATA FETCH
-# ================================================================
 
 def fetch_sessions():
     sessions = []
     for date_code in DATES:
-        print(f"\n[NETWORK] Date: {date_code}...")
-        url = (
-            f"https://in.bookmyshow.com/api/movies-data/seatlayout/v1/primary"
-            f"?eventCode={EVENT_CODE}&dateCode={date_code}"
-            f"&regionCode=HYD&venueCode={VENUE_CODE}"
-        )
-
-        resp = make_bms_request("GET", url, headers=GET_HEADERS)
+        time.sleep(6)
+        print(f"\n[NETWORK] Fetching sessions for Date: {date_code}...")
+        url = f"https://in.bookmyshow.com/api/movies-data/seatlayout/v1/primary?eventCode={EVENT_CODE}&dateCode={date_code}&regionCode=HYD&venueCode={VENUE_CODE}"
+        
+        resp = make_bms_request('GET', url, headers=GET_HEADERS)
         if not resp or resp.status_code != 200:
-            print(f"    -> Failed for {date_code}. Skipping.")
+            print(f"    -> Failed fetching {date_code}. Skipping...")
             continue
-
+            
         try:
             data = resp.json()
-
-            if not resp.text.strip():
-                print(f"    -> Empty response for {date_code}.")
-                continue
-
             shows = data.get("data", {}).get("showTimes", [])
-            print(f"    -> {len(shows)} shows found.")
-
+            print(f"    -> Found {len(shows)} total shows for this date. Filtering for DOLBY CINEMA...")
+            
             dolby_count = 0
             for show in shows:
-                attr = show.get("attributes", "")
-
-                if SCREEN_LABEL.upper() in attr.upper():
+                if show.get("attributes") == "DOLBY CINEMA":
                     sessions.append({
                         "sessionId": show["sessionId"],
-                        "dateCode":  show.get("showDateCode", date_code),
-                        "time":      show["showTime"],
-                        "screen":    attr,
+                        "dateCode": show["showDateCode"],
+                        "time": show["showTime"]
                     })
                     dolby_count += 1
-                    print(f"    -> MATCH: {show['showTime']} | '{attr}' | ID:{show['sessionId']}")
-
-            if dolby_count == 0:
-                print(f"    -> No Dolby matches. All screens found:")
-                for s in shows:
-                    print(f"       {s.get('showTime')} | '{s.get('attributes')}'")
-
+            print(f"    -> Filtered {dolby_count} DOLBY CINEMA sessions for {date_code}.")
+            
         except Exception as e:
-            print(f"    -> Parse error: {e}")
-
+            print(f"    -> JSON Parse error for {date_code}: {e}")
+            
     return sessions
 
 def fetch_seat_layout(session_id):
     url = "https://services-in.bookmyshow.com/doTrans.aspx"
-    payload = (
-        f"strParam4=&strParam5=Y&strParam6=&strParam7=N"
-        f"&strParam1={session_id}&strParam2=WEB&strParam3="
-        f"&strVenueCode={VENUE_CODE}&lngTransactionIdentifier=0"
-        f"&strAppCode=MOBAND2&strFormat=json&strCommand=GETSEATLAYOUT"
-    )
-
-    resp = make_bms_request("POST", url, headers=POST_HEADERS, data=payload)
-
+    payload = f"strParam4=&strParam5=Y&strParam6=&strParam7=N&strParam1={session_id}&strParam2=WEB&strParam3=&strVenueCode={VENUE_CODE}&lngTransactionIdentifier=0&strAppCode=MOBAND2&strFormat=json&strCommand=GETSEATLAYOUT"
+    
+    print(f"    -> [POST] {url} (Session: {session_id})")
+    resp = make_bms_request('POST', url, headers=POST_HEADERS, data=payload)
+    
     if not resp or resp.status_code != 200:
+        print(f"    -> Failed layout fetch.")
         return ""
-
+        
     try:
         return resp.json().get("BookMyShow", {}).get("strData", "")
-    except Exception:
+    except Exception as e:
+        print(f"    -> Exception during JSON parse for layout {session_id}: {e}")
         return ""
 
 def parse_layout(str_data):
-    if not str_data:
-        return {}
-
+    if not str_data: return {}
+    
     parts = str_data.split("||")
     rows_data = parts[1] if len(parts) > 1 else parts[0]
-
-    available = {}
-    for row in rows_data.split("|"):
-        if not row or ":" not in row:
-            continue
+    rows = rows_data.split("|")
+    
+    available_seats_by_row = {}
+    
+    for row in rows:
+        if not row or ":" not in row: continue
         elements = row.split(":")
-        if len(elements) < 3:
-            continue
         row_letter = elements[1]
         seats = elements[2:]
-
+        
         available_in_row = []
         for seat in seats:
             match = re.search(r"A[^2]\d{2}(\d+)\+", seat)
             if match:
                 available_in_row.append(match.group(1))
-
+                
         if available_in_row:
-            available[row_letter] = available_in_row
-
-    return available
-
-# ================================================================
-# MAIN
-# ================================================================
+            available_seats_by_row[row_letter] = available_in_row
+            
+    return available_seats_by_row
 
 def main():
     start_time = time.time()
-
-    print("=" * 52)
-    print("  SPIDER-MAN — ALLU CINEMAS KOKAPET DOLBY MONITOR")
-    print("=" * 52)
-    print(f"  Movie  : Spider-Man Brand New Day (ET00502689)")
-    print(f"  Venue  : Allu Cinemas Kokapet (ALUC)")
-    print(f"  Screen : DOLBY CINEMA")
-    print(f"  Dates  : {DATES}")
-    print(f"  ntfy   : ntfy.sh/alusdolby")
-    print(f"  WARP   : {USE_WARP}")
-    print(f"  Sleep  : {SLEEP_BETWEEN_SESSIONS}s between sessions")
-    print("=" * 52)
-
-    # Send startup test notification
-    test_ntfy()
-
-    # Fetch all Dolby sessions
-    print("\nFetching Dolby sessions...")
+    
+    print("==================================================")
+    print("🚀 STARTING BMS SEAT SCRAPER")
+    print("==================================================")
+    print("Fetching valid sessions...")
     target_sessions = fetch_sessions()
-    total = len(target_sessions)
-
-    print(f"\nFound {total} Dolby session(s) to monitor.")
-
-    if total > 0:
-        print("\nSession summary:")
-        for s in target_sessions:
-            print(f"  {s['dateCode']} | {s['time']} | ID:{s['sessionId']}")
-
-    print("=" * 52)
-
-    if total == 0:
-        print("No sessions found. Exiting.")
+    
+    total_sessions = len(target_sessions)
+    print(f"\n✅ Found a total of {total_sessions} DOLBY CINEMA sessions to monitor.")
+    print("==================================================")
+    
+    if total_sessions == 0:
+        print("No valid sessions found. Exiting.")
         return
 
-    # Load state
+    print("\n[GIT] Loading initial state from repository...")
     state = load_state()
     is_first_run = len(state) == 0
-
     if is_first_run:
-        print("\n[STATE] First run — recording baseline.")
-        print("        No alerts this cycle.")
-        print("        Alerts ACTIVE from cycle 2 onwards.")
+        print("[STATE] Empty state found. Initializing baseline silently...")
     else:
-        print(f"\n[STATE] Loaded {len(state)} session(s) from memory.")
-        print("        Alerts ACTIVE.")
+        print(f"[STATE] Loaded existing state for {len(state)} sessions.")
 
     cycle_count = 1
-
+    
     while (time.time() - start_time) < MAX_RUNTIME_SECONDS:
-        print(f"\n{'='*52}")
-        print(f"  CYCLE {cycle_count} | {datetime.now().strftime('%H:%M:%S')}")
-        print(f"{'='*52}")
-
+        print(f"\n==================================================")
+        print(f"🔄 STARTING POLLING CYCLE {cycle_count}")
+        print(f"==================================================")
+        
+        # Pull latest state before starting the cycle
         state = load_state()
-        deltas = {}
-
+        deltas = {} # Track ONLY the sessions that change during this cycle
+        
         for index, session in enumerate(target_sessions, 1):
-            s_id        = session["sessionId"]
-            s_date      = session["dateCode"]
-            s_time      = session["time"]
-            booking_url = (
-                f"https://in.bookmyshow.com/movies/NCR/seat-layout/ET00502689/ALUC/{s_id}/{s_date}"
-            )
-
-            print(f"\n  [{index}/{total}] {s_date} {s_time} | ID:{s_id}")
-
-            if index > 1:
-                time.sleep(SLEEP_BETWEEN_SESSIONS)
-
+            s_id = session["sessionId"]
+            s_date = session["dateCode"]
+            s_time = session["time"]
+            
+            print(f"\n[{index}/{total_sessions}] Checking Session {s_id} (Date: {s_date} Time: {s_time})")
+            print("    -> Sleeping for 30 seconds (Rate Limit Prevention)...")
+            time.sleep(21) 
+            
             str_data = fetch_seat_layout(s_id)
             if not str_data:
-                print("    -> Empty seat data.")
+                print("    -> Error: Received empty strData.")
                 continue
-
+                
             current_seats = parse_layout(str_data)
-            current_total = sum(len(v) for v in current_seats.values())
-            current_rows  = sorted(current_seats.keys())
-            print(f"    -> Seats: {current_total} | Rows: {current_rows}")
-
-            # Get previous state
+            current_total = sum(len(seats) for seats in current_seats.values())
+            print(f"    -> Parse successful. Current Available Seats: {current_total}")
+            
             if s_id not in state:
-                state[s_id] = {
-                    "date":  s_date,
-                    "time":  s_time,
-                    "total": 0,
-                    "rows":  {}
-                }
-
-            prev_total = state[s_id].get("total", 0)
-            prev_rows  = state[s_id].get("rows", {})
-
-            # Detect newly unblocked seats
-            newly_unblocked = 0
-            unblocked_rows  = []
-
+                state[s_id] = {"date": s_date, "time": s_time, "total": 0, "rows": {}}
+            
+            previous_total = state[s_id].get("total", 0)
+            previous_rows = state[s_id].get("rows", {})
+            
+            newly_unblocked_count = 0
+            unblocked_rows_list = []
+            
             for row, seats in current_seats.items():
-                old = set(prev_rows.get(row, []))
-                new = set(seats) - old
-                if new:
-                    newly_unblocked += len(new)
-                    unblocked_rows.append(row)
-
-            # React to changes
-            if newly_unblocked > 0 and not is_first_run:
-                rows_str = ", ".join(sorted(unblocked_rows))
-                print(f"    -> UNBLOCKED: +{newly_unblocked} seats in rows {rows_str}!")
-
-                title = f"SPIDER-MAN DOLBY — {newly_unblocked} seats unblocked!"
-                msg = (
-                    f"Allu Cinemas Kokapet | Dolby Cinema\n"
-                    f"Date: {s_date} | Time: {s_time}\n"
-                    f"Rows: {rows_str}\n"
-                    f"New seats: {newly_unblocked} | Total: {current_total}\n"
-                    f"Detected: {datetime.now().strftime('%H:%M:%S')}\n"
-                    f"Book: {booking_url}"
-                )
-                trigger_ntfy(title, msg)
-
-                state[s_id]["rows"]  = current_seats
+                old_seats_in_row = previous_rows.get(row, [])
+                new_seats = set(seats) - set(old_seats_in_row)
+                
+                if new_seats:
+                    newly_unblocked_count += len(new_seats)
+                    unblocked_rows_list.append(row)
+            
+            if newly_unblocked_count > 0:
+                print(f"    -> 🟢 DETECTED UNBLOCKS: +{newly_unblocked_count} new seats!")
+                
+                if not is_first_run:
+                    # Check if the unblocked seats meet the minimum threshold of 6
+                    if newly_unblocked_count >= 5:
+                        rows_str = ", ".join(sorted(unblocked_rows_list))
+                        human_date = humanize_date(s_date)
+                        
+                        msg = (
+                            f"[{newly_unblocked_count}] BND dolby."
+                            f"{rows_str} rows unblocked for #SpiderManBrandNewDay at  DOLBY CINEMA.\n\n"
+                            f"{human_date}, {s_time}"
+                            f"https://in.bookmyshow.com/movies/NCR/seat-layout/ET00502689/ALUC/{s_id}/{s_date}"
+                        )
+                        trigger_ntfy(msg)
+                    else:
+                        print(f"    -> 🟡 Less than 6 seats unblocked ({newly_unblocked_count}). Skipping notification to avoid spam.")
+                
+                # Update memory & Track Delta
+                state[s_id]["rows"] = current_seats
                 state[s_id]["total"] = current_total
                 deltas[s_id] = state[s_id]
 
-            elif newly_unblocked > 0 and is_first_run:
-                print(f"    -> First run — {newly_unblocked} seats noted (no alert).")
-                state[s_id]["rows"]  = current_seats
+            elif current_total < previous_total:
+                print(f"    -> 🔴 Seats booked. Total dropped from {previous_total} down to {current_total}.")
+                # Update memory & Track Delta
+                state[s_id]["rows"] = current_seats
                 state[s_id]["total"] = current_total
                 deltas[s_id] = state[s_id]
-
-            elif current_total > prev_total and not is_first_run:
-                delta    = current_total - prev_total
-                rows_str = ", ".join(current_rows)
-                print(f"    -> SEATS INCREASED: +{delta}")
-
-                title = f"SPIDER-MAN DOLBY — +{delta} more seats!"
-                msg = (
-                    f"Allu Cinemas Kokapet | Dolby Cinema\n"
-                    f"Date: {s_date} | Time: {s_time}\n"
-                    f"Rows: {rows_str}\n"
-                    f"Total now: {current_total} (+{delta})\n"
-                    f"Detected: {datetime.now().strftime('%H:%M:%S')}\n"
-                    f"Book: {booking_url}"
-                )
-                trigger_ntfy(title, msg)
-
-                state[s_id]["rows"]  = current_seats
-                state[s_id]["total"] = current_total
-                deltas[s_id] = state[s_id]
-
-            elif current_total < prev_total:
-                print(f"    -> Seats booked: {prev_total} -> {current_total}")
-                state[s_id]["rows"]  = current_seats
-                state[s_id]["total"] = current_total
-                deltas[s_id] = state[s_id]
-
+                
             else:
-                print(f"    -> No change ({current_total} seats).")
+                print("    -> ⚪ No changes detected.")
 
         if deltas:
             print("\n[STATE] Cycle finished. Changes detected, merging and saving to Git...")
-            state = save_state(deltas, f"ALUS Dolby cycle {cycle_count}")
+            # Save state will handle merging our deltas with the newest Git data
+            # and return the freshly synced state to update our memory
+            state = save_state(deltas, f"State update at cycle {cycle_count}")
         else:
-            print(f"\n[STATE] No changes this cycle.")
-
+            print("\n[STATE] Cycle finished. No changes detected.")
+            
         if is_first_run:
             is_first_run = False
-            print("\n[STATE] Baseline established.")
-            print("[STATE] Alerts ACTIVE from next cycle.")
-
+            print("[STATE] First run baseline has been successfully established.")
+            
         cycle_count += 1
-        print(f"\n  Next cycle in {SLEEP_BETWEEN_CYCLES}s...")
-        time.sleep(SLEEP_BETWEEN_CYCLES)
-
-    print("\nTime limit reached.")
-    save_state(load_state(), "ALUS final save")
+        
+    print("\n🏁 Time limit reached (5h 55m). Gracefully shutting down.")
 
 if __name__ == "__main__":
     main()
