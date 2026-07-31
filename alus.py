@@ -54,8 +54,8 @@ SCREEN_LABEL = "DOLBY CINEMA"
 NTFY_TOPIC = "spiderman_prasads_730"
 
 # Sleep settings
-SLEEP_BETWEEN_SESSIONS = 10   # seconds between each session
-SLEEP_BETWEEN_CYCLES   = 10   # seconds after all sessions done
+SLEEP_BETWEEN_SESSIONS = 45   # seconds between each session
+SLEEP_BETWEEN_CYCLES   = 120  # seconds after all sessions done
 
 # ================================================================
 # GIT FUNCTIONS
