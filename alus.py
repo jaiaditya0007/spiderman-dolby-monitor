@@ -7,15 +7,14 @@ import re
 import subprocess
 from datetime import datetime
 
-# --- CONFIGURATION ---
-#DATES = ["20260730", "20260731", "20260801", "20260802"]
-DATES = [ "20260808", "20260809"]
-VENUE_CODE = "ALUC"
-EVENT_CODE = "ET00502689"
+# --- CONFIGURATION FOR ALLU CINEMAS ---
+DATES = ["20260808", "20260809"]
+VENUE_CODE = "ALUC"                  # ALLU Cinemas, Kokapet
+EVENT_CODE = "ET00502689"            # Spider-Man: Brand New Day
 STATE_FILE = "state_alus.json"
+NTFY_TOPIC = "alusdolby"
 MAX_RUNTIME_SECONDS = (5 * 3600) + (55 * 60) # 5 hours 55 mins
 
-# Track WARP State natively
 USE_WARP = False
 
 # Cloudflare WARP local proxy
@@ -24,11 +23,12 @@ PROXIES = {
     "https": "socks5://127.0.0.1:40000"
 }
 
+# Regional Headers set to NCR for ALLU Cinemas
 GET_HEADERS = {
     "Host": "in.bookmyshow.com",
     "Content-Type": "application/json",
-    "X-Latitude": "17.385044",
-    "X-Subregion-Code": "HYD",
+    "X-Latitude": "28.6139",
+    "X-Subregion-Code": "NCR",
     "X-App-Code": "MOBAND2",
     "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 10; Android SDK built for x86_64 Build/QSR1.211112.011)",
     "X-App-Version": "18.2.3",
@@ -39,8 +39,8 @@ GET_HEADERS = {
 POST_HEADERS = {
     "Host": "services-in.bookmyshow.com",
     "X-Timeout": "10",
-    "X-Latitude": "17.385044",
-    "X-Subregion-Code": "HYD",
+    "X-Latitude": "28.6139",
+    "X-Subregion-Code": "NCR",
     "X-App-Code": "MOBAND2",
     "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 10; Android SDK built for x86_64 Build/QSR1.211112.011)",
     "X-App-Version": "18.2.3",
@@ -51,17 +51,15 @@ POST_HEADERS = {
 def humanize_date(date_str):
     dt = datetime.strptime(date_str, "%Y%m%d")
     day = dt.day
-
     if 11 <= (day % 100) <= 13:
         suffix = 'th'
     else:
         suffix = ['th', 'st', 'nd', 'rd', 'th'][min(day % 10, 4)]
-        
     month_name = dt.strftime("%B")
     return f"{day}{suffix} {month_name}"
 
 def quiet_git_pull():
-    """Fetches and hard resets to exactly match remote. Wipes any failed local commits to prevent JSON merge conflicts."""
+    """Fetches and hard resets to match remote. Wipes local noise to prevent conflicts."""
     subprocess.run(["git", "fetch", "origin", "main"], capture_output=True, check=False)
     subprocess.run(["git", "reset", "--hard", "origin/main"], capture_output=True, check=False)
 
@@ -70,7 +68,6 @@ def quiet_git_push():
     return res.returncode == 0
 
 def read_local_state():
-    """Reads the JSON from disk without touching Git."""
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, "r") as f:
@@ -81,32 +78,20 @@ def read_local_state():
     return {}
 
 def load_state():
-    """Syncs with remote and loads the freshest state into memory."""
     quiet_git_pull()
     return read_local_state()
 
 def save_state(deltas, commit_msg="Update seat state"):
-    """
-    Takes a dictionary of local session changes (deltas), cleanly merges them with the 
-    absolute latest Git state, and pushes. Retries seamlessly if another runner pushes first.
-    Returns the newly merged state so the runner can update its memory.
-    """
     for attempt in range(3):
-        # 1. Force sync local repo with remote (drops any failed local commits from prior attempts)
         quiet_git_pull()
-        
-        # 2. Read the newly synced remote state
         latest_state = read_local_state()
         
-        # 3. Merge our locally tracked changes (deltas) into this state
         for s_id, s_data in deltas.items():
             latest_state[s_id] = s_data
             
-        # 4. Save the merged state to disk
         with open(STATE_FILE, "w") as f:
             json.dump(latest_state, f, indent=2)
             
-        # 5. Commit
         subprocess.run(["git", "add", STATE_FILE], capture_output=True, check=False)
         status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
         
@@ -114,18 +99,17 @@ def save_state(deltas, commit_msg="Update seat state"):
             print(f"[GIT] Committing changes to {STATE_FILE} (Attempt {attempt+1})...")
             subprocess.run(["git", "commit", "-m", commit_msg], capture_output=True, check=False)
             
-            # 6. Push
             if quiet_git_push():
                 print(f"[GIT] Successfully pushed merged state to repository.")
                 return latest_state
             else:
-                print(f"[GIT] Push attempt {attempt+1} failed (likely concurrent push). Retrying merge...")
+                print(f"[GIT] Push attempt {attempt+1} failed. Retrying merge...")
                 time.sleep(2)
         else:
             print("[GIT] Merged state is identical to remote. Nothing to push.")
             return latest_state
             
-    print("[GIT] ❌ Failed to push after 3 attempts. Local memory updated with last known merge.")
+    print("[GIT] ❌ Failed to push after 3 attempts.")
     return latest_state
 
 def trigger_ntfy(message):
@@ -133,34 +117,30 @@ def trigger_ntfy(message):
     for i in range(1):
         try:
             resp = requests.post(
-                "https://ntfy.sh/alusdolby",
+                f"https://ntfy.sh/{NTFY_TOPIC}",
                 data=message.encode('utf-8'),
                 headers={"Priority": "urgent"},
                 timeout=10
             )
-            print(f"    -> Ntfy ping {i+1}/1 sent! Status: {resp.status_code}")
+            print(f"    -> Ntfy ping sent! Status: {resp.status_code}")
         except Exception as e:
-            print(f"    -> Ntfy ping {i+1} failed: {e}")
+            print(f"    -> Ntfy ping failed: {e}")
 
 def toggle_warp():
-    """Toggles Cloudflare WARP on/off and updates the proxy state."""
     global USE_WARP
     if USE_WARP:
-        print("    -> 🚨 [IP ROTATION] WARP is currently ON. Disconnecting WARP (Switching to Runner IP)...")
+        print("    -> 🚨 [IP ROTATION] Disconnecting WARP...")
         subprocess.run(["warp-cli", "--accept-tos", "disconnect"], capture_output=True, check=False)
         USE_WARP = False
     else:
-        print("    -> 🚨 [IP ROTATION] WARP is currently OFF. Connecting to WARP (Switching to Cloudflare Proxy)...")
+        print("    -> 🚨 [IP ROTATION] Connecting to WARP...")
         subprocess.run(["warp-cli", "--accept-tos", "connect"], capture_output=True, check=False)
-        time.sleep(5)  # Wait for the tunnel to establish
+        time.sleep(5)
         USE_WARP = True
 
 def make_bms_request(method, url, max_retries=3, **kwargs):
-    """Network wrapper that intercepts 429s, toggles WARP, and retries the request seamlessly."""
     for attempt in range(1, max_retries + 1):
-        # Dynamically apply proxies only if WARP is ON
         current_proxies = PROXIES if USE_WARP else None
-        
         try:
             if method.upper() == 'GET':
                 resp = cffi_requests.get(url, proxies=current_proxies, impersonate="chrome", timeout=15, **kwargs)
@@ -169,16 +149,11 @@ def make_bms_request(method, url, max_retries=3, **kwargs):
             
             print(f"    -> Status: {resp.status_code} (Using WARP: {USE_WARP})")
             
-            # Catch Rate Limits
-            if resp.status_code in [429,403]:
-                print(f"    -> ⚠️ Rate limited (429) on attempt {attempt}/{max_retries}.")
+            if resp.status_code in [429, 403]:
+                print(f"    -> ⚠️ Rate limited ({resp.status_code}) on attempt {attempt}/{max_retries}.")
                 if attempt < max_retries:
                     toggle_warp()
-                    print("    -> Retrying request...")
-                    continue # Retry loop
-                else:
-                    print("    -> ❌ Max retries reached for this request.")
-            
+                    continue
             return resp
             
         except Exception as e:
@@ -186,7 +161,6 @@ def make_bms_request(method, url, max_retries=3, **kwargs):
             if attempt < max_retries:
                 time.sleep(3)
                 continue
-    
     return None
 
 def fetch_sessions():
@@ -194,7 +168,7 @@ def fetch_sessions():
     for date_code in DATES:
         time.sleep(6)
         print(f"\n[NETWORK] Fetching sessions for Date: {date_code}...")
-        url = f"https://in.bookmyshow.com/api/movies-data/seatlayout/v1/primary?eventCode={EVENT_CODE}&dateCode={date_code}&regionCode=HYD&venueCode={VENUE_CODE}"
+        url = f"https://in.bookmyshow.com/api/movies-data/seatlayout/v1/primary?eventCode={EVENT_CODE}&dateCode={date_code}&regionCode=NCR&venueCode={VENUE_CODE}"
         
         resp = make_bms_request('GET', url, headers=GET_HEADERS)
         if not resp or resp.status_code != 200:
@@ -202,16 +176,16 @@ def fetch_sessions():
             continue
             
         try:
-            data = resp.json()
-            shows = data.get("data", {}).get("showTimes", [])
+            shows = resp.json().get("data", {}).get("showTimes", [])
             print(f"    -> Found {len(shows)} total shows for this date. Filtering for DOLBY CINEMA...")
             
             dolby_count = 0
             for show in shows:
-                if show.get("attributes") == "DOLBY CINEMA":
+                attr = str(show.get("attributes", "")).upper()
+                if "DOLBY" in attr or "ALL" in attr:
                     sessions.append({
                         "sessionId": show["sessionId"],
-                        "dateCode": show["showDateCode"],
+                        "dateCode": show.get("showDateCode", date_code),
                         "time": show["showTime"]
                     })
                     dolby_count += 1
@@ -228,37 +202,44 @@ def fetch_seat_layout(session_id):
     
     print(f"    -> [POST] {url} (Session: {session_id})")
     resp = make_bms_request('POST', url, headers=POST_HEADERS, data=payload)
-    
     if not resp or resp.status_code != 200:
-        print(f"    -> Failed layout fetch.")
         return ""
-        
     try:
         return resp.json().get("BookMyShow", {}).get("strData", "")
-    except Exception as e:
-        print(f"    -> Exception during JSON parse for layout {session_id}: {e}")
+    except Exception:
         return ""
 
-def parse_layout(str_data):
-    if not str_data: return {}
+def parse_layout_allu(str_data):
+    """
+    Reverse-engineered parser designed specifically for ALLU Cinemas layout format.
+    Filters tokens like 'D102+33' where status flag '1' represents open/available seats.
+    """
+    if not str_data:
+        return {}
     
     parts = str_data.split("||")
     rows_data = parts[1] if len(parts) > 1 else parts[0]
-    rows = rows_data.split("|")
     
     available_seats_by_row = {}
     
-    for row in rows:
-        if not row or ":" not in row: continue
+    for row in rows_data.split("|"):
+        if not row or ":" not in row:
+            continue
+            
         elements = row.split(":")
+        if len(elements) < 3:
+            continue
+            
         row_letter = elements[1]
-        seats = elements[2:]
+        seats_tokens = elements[2:]
         
         available_in_row = []
-        for seat in seats:
-            match = re.search(r"A[^2]\d{2}(\d+)\+", seat)
+        for token in seats_tokens:
+            # Matches tokens starting with Category Letter, Status 1 (Available), 2 digits, and +SeatNumber
+            match = re.search(r"^[A-Z]1\d{2}\+(\d+)$", token.strip())
             if match:
-                available_in_row.append(match.group(1))
+                seat_num = match.group(1).lstrip("0")
+                available_in_row.append(seat_num)
                 
         if available_in_row:
             available_seats_by_row[row_letter] = available_in_row
@@ -269,9 +250,8 @@ def main():
     start_time = time.time()
     
     print("==================================================")
-    print("🚀 STARTING BMS SEAT SCRAPER")
+    print("🚀 STARTING ALLU CINEMAS (DOLBY CINEMA) MONITOR")
     print("==================================================")
-    print("Fetching valid sessions...")
     target_sessions = fetch_sessions()
     
     total_sessions = len(target_sessions)
@@ -297,9 +277,8 @@ def main():
         print(f"🔄 STARTING POLLING CYCLE {cycle_count}")
         print(f"==================================================")
         
-        # Pull latest state before starting the cycle
         state = load_state()
-        deltas = {} # Track ONLY the sessions that change during this cycle
+        deltas = {}
         
         for index, session in enumerate(target_sessions, 1):
             s_id = session["sessionId"]
@@ -307,7 +286,7 @@ def main():
             s_time = session["time"]
             
             print(f"\n[{index}/{total_sessions}] Checking Session {s_id} (Date: {s_date} Time: {s_time})")
-            print("    -> Sleeping for 30 seconds (Rate Limit Prevention)...")
+            print("    -> Sleeping for 21 seconds (Rate Limit Prevention)...")
             time.sleep(21) 
             
             str_data = fetch_seat_layout(s_id)
@@ -315,7 +294,7 @@ def main():
                 print("    -> Error: Received empty strData.")
                 continue
                 
-            current_seats = parse_layout(str_data)
+            current_seats = parse_layout_allu(str_data)
             current_total = sum(len(seats) for seats in current_seats.values())
             print(f"    -> Parse successful. Current Available Seats: {current_total}")
             
@@ -331,7 +310,6 @@ def main():
             for row, seats in current_seats.items():
                 old_seats_in_row = previous_rows.get(row, [])
                 new_seats = set(seats) - set(old_seats_in_row)
-                
                 if new_seats:
                     newly_unblocked_count += len(new_seats)
                     unblocked_rows_list.append(row)
@@ -340,29 +318,23 @@ def main():
                 print(f"    -> 🟢 DETECTED UNBLOCKS: +{newly_unblocked_count} new seats!")
                 
                 if not is_first_run:
-                    # Check if the unblocked seats meet the minimum threshold of 6
-                    if newly_unblocked_count >= 5:
+                    if newly_unblocked_count >= 1: # Alert on any unblock
                         rows_str = ", ".join(sorted(unblocked_rows_list))
                         human_date = humanize_date(s_date)
                         
                         msg = (
-                            f"[{newly_unblocked_count}] BND dolby."
-                            f"{rows_str} rows unblocked for #SpiderManBrandNewDay at  DOLBY CINEMA.\n\n"
+                            f"[{newly_unblocked_count}] BND DOLBY.\n"
+                            f"{rows_str} rows unblocked for #SpiderManBrandNewDay at ALLU Cinemas Dolby Screen.\n\n"
                             f"{human_date}, {s_time}"
-                            f"https://in.bookmyshow.com/movies/NCR/seat-layout/ET00502689/ALUC/{s_id}/{s_date}"
                         )
                         trigger_ntfy(msg)
-                    else:
-                        print(f"    -> 🟡 Less than 6 seats unblocked ({newly_unblocked_count}). Skipping notification to avoid spam.")
                 
-                # Update memory & Track Delta
                 state[s_id]["rows"] = current_seats
                 state[s_id]["total"] = current_total
                 deltas[s_id] = state[s_id]
 
             elif current_total < previous_total:
                 print(f"    -> 🔴 Seats booked. Total dropped from {previous_total} down to {current_total}.")
-                # Update memory & Track Delta
                 state[s_id]["rows"] = current_seats
                 state[s_id]["total"] = current_total
                 deltas[s_id] = state[s_id]
@@ -372,15 +344,13 @@ def main():
 
         if deltas:
             print("\n[STATE] Cycle finished. Changes detected, merging and saving to Git...")
-            # Save state will handle merging our deltas with the newest Git data
-            # and return the freshly synced state to update our memory
-            state = save_state(deltas, f"State update at cycle {cycle_count}")
+            state = save_state(deltas, f"ALLU state update cycle {cycle_count}")
         else:
             print("\n[STATE] Cycle finished. No changes detected.")
             
         if is_first_run:
             is_first_run = False
-            print("[STATE] First run baseline has been successfully established.")
+            print("[STATE] First run baseline has been successfully established in state_alus.json.")
             
         cycle_count += 1
         
