@@ -11,7 +11,7 @@ from datetime import datetime
 DATES = ["20260809"]
 VENUE_CODE = "DVRR"                  # Devi 70mm 4K Laser Dolby Atmos
 EVENT_CODE = "ET00006198"            # Dookudu
-STATE_FILE = "state_dksd.json"       # Persistent state tracking
+STATE_FILE = "state_dkdv.json"       # Persistent state tracking
 NTFY_TOPIC = "dksdntf"               # Notification topic
 MAX_RUNTIME_SECONDS = (5 * 3600) + (55 * 60) # 5 hours 55 minutes
 
