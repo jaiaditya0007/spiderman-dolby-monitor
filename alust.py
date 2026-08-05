@@ -8,7 +8,7 @@ import subprocess
 from datetime import datetime
 
 # --- CONFIGURATION FOR ALLU CINEMAS ---
-DATES = ["20260806"]
+DATES = ["20260805","20260806"]
 VENUE_CODE = "ALUC"                  # ALLU Cinemas, Kokapet
 EVENT_CODE = "ET00502689"            # Spider-Man: Brand New Day
 STATE_FILE = "state_alust.json"
