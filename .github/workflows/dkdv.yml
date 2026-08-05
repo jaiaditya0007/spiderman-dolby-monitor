@@ -26,8 +26,8 @@ jobs:
           python-version: '3.10'
 
       - name: Install Python Dependencies
-        run: pip install requests curl-cffi
-
+        run: pip install requests curl-cffi typing_extensions
+        
       - name: Configure Git User
         run: |
           git config --global user.name "github-actions[bot]"
