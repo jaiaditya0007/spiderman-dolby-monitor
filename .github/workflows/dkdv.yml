@@ -106,4 +106,4 @@ jobs:
           curl -x socks5://127.0.0.1:40000 https://1.1.1.1/cdn-cgi/trace | grep warp || echo "WARP Test Failed, but continuing..."
 
       - name: Run Dookudu Devi 70mm Script
-        run: python -u dksd.py
+        run: python -u dkdv.py
