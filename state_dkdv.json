@@ -32,15 +32,11 @@
   "3620": {
     "date": "20260808",
     "time": "02:00 PM",
-    "total": 4,
+    "total": 2,
     "rows": {
-      "LOWER BALCONY: Row A": [
-        "17"
-      ],
       "LOWER BALCONY: Row I": [
         "3",
-        "5",
-        "6"
+        "42"
       ]
     }
   }
