@@ -26,17 +26,14 @@
   "3619": {
     "date": "20260808",
     "time": "05:45 PM",
-    "total": 4,
+    "total": 3,
     "rows": {
-      "UPPER BALCONY: Row D": [
+      "UPPER BALCONY: Row C": [
+        "15",
         "45"
       ],
-      "SECOND CLASS: Row F": [
-        "5"
-      ],
       "SECOND CLASS: Row G": [
-        "36",
-        "37"
+        "28"
       ]
     }
   }
