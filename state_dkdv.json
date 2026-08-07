@@ -22,5 +22,22 @@
     "time": "10:00 PM",
     "total": 0,
     "rows": {}
+  },
+  "3619": {
+    "date": "20260808",
+    "time": "05:45 PM",
+    "total": 4,
+    "rows": {
+      "UPPER BALCONY: Row D": [
+        "45"
+      ],
+      "SECOND CLASS: Row F": [
+        "5"
+      ],
+      "SECOND CLASS: Row G": [
+        "36",
+        "37"
+      ]
+    }
   }
 }
