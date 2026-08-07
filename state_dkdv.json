@@ -26,39 +26,7 @@
   "3619": {
     "date": "20260808",
     "time": "05:45 PM",
-    "total": 19,
-    "rows": {
-      "UPPER BALCONY: Row E": [
-        "4",
-        "5",
-        "34",
-        "35"
-      ],
-      "UPPER BALCONY: Row D": [
-        "28",
-        "29",
-        "43",
-        "44"
-      ],
-      "UPPER BALCONY: Row C": [
-        "10",
-        "11",
-        "12",
-        "30",
-        "31"
-      ],
-      "SECOND CLASS: Row B": [
-        "3",
-        "4",
-        "14"
-      ],
-      "SECOND CLASS: Row D": [
-        "18",
-        "19"
-      ],
-      "SECOND CLASS: Row F": [
-        "6"
-      ]
-    }
+    "total": 0,
+    "rows": {}
   }
 }
