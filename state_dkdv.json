@@ -32,7 +32,12 @@
   "3620": {
     "date": "20260808",
     "time": "02:00 PM",
-    "total": 0,
-    "rows": {}
+    "total": 2,
+    "rows": {
+      "SECOND CLASS: Row G": [
+        "34",
+        "35"
+      ]
+    }
   }
 }
