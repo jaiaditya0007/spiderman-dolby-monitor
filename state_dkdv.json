@@ -26,20 +26,8 @@
   "3619": {
     "date": "20260808",
     "time": "05:45 PM",
-    "total": 5,
-    "rows": {
-      "LOWER BALCONY: Row A": [
-        "35"
-      ],
-      "LOWER BALCONY: Row B": [
-        "3",
-        "4"
-      ],
-      "LOWER BALCONY: Row K": [
-        "13",
-        "19"
-      ]
-    }
+    "total": 0,
+    "rows": {}
   },
   "3620": {
     "date": "20260808",
