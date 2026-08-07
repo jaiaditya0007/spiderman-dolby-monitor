@@ -32,38 +32,30 @@
   "3620": {
     "date": "20260808",
     "time": "02:00 PM",
-    "total": 25,
+    "total": 17,
     "rows": {
       "LOWER BALCONY: Row B": [
         "1",
         "5",
         "6",
-        "35",
-        "36",
         "37",
         "38",
         "39",
         "40"
       ],
       "LOWER BALCONY: Row C": [
-        "1",
-        "2",
         "26",
         "42"
       ],
       "LOWER BALCONY: Row D": [
         "13",
         "26",
-        "37",
-        "38",
-        "39",
-        "40",
-        "41",
         "42"
       ],
       "LOWER BALCONY: Row E": [
         "3",
-        "35"
+        "33",
+        "34"
       ],
       "LOWER BALCONY: Row I": [
         "3",
