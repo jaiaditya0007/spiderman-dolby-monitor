@@ -28,11 +28,9 @@
     "time": "05:45 PM",
     "total": 2,
     "rows": {
-      "LOWER BALCONY: Row B": [
-        "6"
-      ],
-      "LOWER BALCONY: Row K": [
-        "13"
+      "LOWER BALCONY: Row A": [
+        "43",
+        "44"
       ]
     }
   },
