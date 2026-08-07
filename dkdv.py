@@ -8,7 +8,7 @@ import subprocess
 from datetime import datetime
 
 # --- CONFIGURATION FOR DOOKUDU @ DEVI 70MM ---
-DATES = ["20260809","20260809"]
+DATES = ["20260808","20260809"]
 VENUE_CODE = "DVRR"                  # Devi 70mm 4K Laser Dolby Atmos
 EVENT_CODE = "ET00006198"            # Dookudu
 STATE_FILE = "state_dkdv.json"       # Persistent state tracking
