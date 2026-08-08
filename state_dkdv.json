@@ -38,7 +38,7 @@
   "3621": {
     "date": "20260808",
     "time": "10:15 AM",
-    "total": 113,
+    "total": 112,
     "rows": {
       "UPPER BALCONY: Row J": [
         "4"
@@ -60,6 +60,8 @@
       "UPPER BALCONY: Row G": [
         "2",
         "3",
+        "43",
+        "44",
         "45",
         "46",
         "47",
@@ -68,8 +70,6 @@
       "UPPER BALCONY: Row F": [
         "2",
         "3",
-        "43",
-        "44",
         "45",
         "46",
         "47",
@@ -135,9 +135,6 @@
       ],
       "SECOND CLASS: Row D": [
         "35"
-      ],
-      "SECOND CLASS: Row E": [
-        "2"
       ],
       "SECOND CLASS: Row F": [
         "1",
