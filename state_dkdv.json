@@ -38,7 +38,7 @@
   "3621": {
     "date": "20260808",
     "time": "10:15 AM",
-    "total": 153,
+    "total": 151,
     "rows": {
       "UPPER BALCONY: Row J": [
         "4",
@@ -116,8 +116,6 @@
       "LOWER BALCONY: Row A": [
         "1",
         "2",
-        "3",
-        "4",
         "41",
         "43",
         "44"
