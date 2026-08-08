@@ -41,7 +41,9 @@
     "total": 147,
     "rows": {
       "UPPER BALCONY: Row J": [
-        "4"
+        "4",
+        "5",
+        "6"
       ],
       "UPPER BALCONY: Row I": [
         "2",
@@ -82,8 +84,6 @@
       "UPPER BALCONY: Row F": [
         "2",
         "3",
-        "4",
-        "5",
         "43",
         "44",
         "45",
@@ -138,6 +138,7 @@
         "42"
       ],
       "LOWER BALCONY: Row E": [
+        "1",
         "41",
         "42"
       ],
@@ -165,7 +166,6 @@
         "35"
       ],
       "SECOND CLASS: Row E": [
-        "2",
         "34"
       ],
       "SECOND CLASS: Row F": [
