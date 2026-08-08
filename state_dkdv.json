@@ -26,12 +26,8 @@
   "3619": {
     "date": "20260808",
     "time": "05:45 PM",
-    "total": 1,
-    "rows": {
-      "LOWER BALCONY: Row I": [
-        "27"
-      ]
-    }
+    "total": 0,
+    "rows": {}
   },
   "3620": {
     "date": "20260808",
@@ -42,7 +38,7 @@
   "3621": {
     "date": "20260808",
     "time": "10:15 AM",
-    "total": 163,
+    "total": 165,
     "rows": {
       "UPPER BALCONY: Row H": [
         "51"
@@ -125,6 +121,8 @@
       ],
       "LOWER BALCONY: Row C": [
         "1",
+        "40",
+        "41",
         "42"
       ],
       "LOWER BALCONY: Row E": [
