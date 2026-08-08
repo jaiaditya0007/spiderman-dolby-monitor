@@ -247,5 +247,20 @@
         "39"
       ]
     }
+  },
+  "3609": {
+    "date": "20260809",
+    "time": "07:00 AM",
+    "total": 4,
+    "rows": {
+      "LOWER BALCONY: Row G": [
+        "1",
+        "42"
+      ],
+      "LOWER BALCONY: Row H": [
+        "1",
+        "42"
+      ]
+    }
   }
 }
