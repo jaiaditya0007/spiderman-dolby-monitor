@@ -38,7 +38,7 @@
   "3621": {
     "date": "20260808",
     "time": "10:15 AM",
-    "total": 112,
+    "total": 108,
     "rows": {
       "UPPER BALCONY: Row J": [
         "4"
@@ -46,9 +46,7 @@
       "UPPER BALCONY: Row I": [
         "4",
         "5",
-        "13",
-        "17",
-        "20"
+        "13"
       ],
       "UPPER BALCONY: Row H": [
         "2",
@@ -78,6 +76,7 @@
       "UPPER BALCONY: Row E": [
         "2",
         "3",
+        "5",
         "44",
         "45",
         "46",
@@ -120,7 +119,6 @@
         "42"
       ],
       "LOWER BALCONY: Row I": [
-        "40",
         "41",
         "42"
       ],
@@ -133,14 +131,10 @@
         "41",
         "42"
       ],
-      "SECOND CLASS: Row D": [
-        "35"
-      ],
       "SECOND CLASS: Row F": [
         "1",
         "2",
         "3",
-        "10",
         "12",
         "31",
         "37",
