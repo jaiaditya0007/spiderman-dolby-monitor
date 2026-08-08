@@ -14,8 +14,12 @@
   "3612": {
     "date": "20260809",
     "time": "06:15 PM",
-    "total": 0,
-    "rows": {}
+    "total": 1,
+    "rows": {
+      "LOWER BALCONY: Row F": [
+        "20"
+      ]
+    }
   },
   "3613": {
     "date": "20260809",
