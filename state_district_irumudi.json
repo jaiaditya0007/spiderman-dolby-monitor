@@ -1,0 +1,18 @@
+{
+  "34956__1787285700__5__935": {
+    "time": "2026-08-21T04:15",
+    "total": 1,
+    "categories": {
+      "PLATINUM": {
+        "available": 1,
+        "total": 416,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 20,
+        "price": 295
+      }
+    }
+  }
+}
