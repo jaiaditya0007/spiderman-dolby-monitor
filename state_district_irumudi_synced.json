@@ -19,15 +19,15 @@
   "34956__1787287500__4__1034": {
     "time": "04:45 AM",
     "audi": "SCREEN 4",
-    "total": 2,
+    "total": 5,
     "categories": {
       "PLATINUM": {
-        "available": 2,
+        "available": 3,
         "total": 120,
         "price": 177
       },
       "RECLINER": {
-        "available": 0,
+        "available": 2,
         "total": 10,
         "price": 295
       }
@@ -53,10 +53,10 @@
   "34956__1787298600__4__1035": {
     "time": "07:50 AM",
     "audi": "SCREEN 4",
-    "total": 24,
+    "total": 10,
     "categories": {
       "PLATINUM": {
-        "available": 24,
+        "available": 10,
         "total": 120,
         "price": 177
       },
@@ -70,10 +70,10 @@
   "34956__1787307300__5__937": {
     "time": "10:15 AM",
     "audi": "SCREEN 5",
-    "total": 64,
+    "total": 37,
     "categories": {
       "PLATINUM": {
-        "available": 64,
+        "available": 37,
         "total": 416,
         "price": 177
       },
@@ -87,10 +87,10 @@
   "34956__1787309700__4__1036": {
     "time": "10:55 AM",
     "audi": "SCREEN 4",
-    "total": 10,
+    "total": 13,
     "categories": {
       "PLATINUM": {
-        "available": 10,
+        "available": 13,
         "total": 120,
         "price": 177
       },
