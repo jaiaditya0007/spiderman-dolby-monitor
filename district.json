@@ -151,5 +151,175 @@
         "price": 295
       }
     }
+  },
+  "34956__1787372100__5__981": {
+    "time": "09:45 AM",
+    "audi": "SCREEN 5",
+    "total": 33,
+    "categories": {
+      "PLATINUM": {
+        "available": 33,
+        "total": 416,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 20,
+        "price": 295
+      }
+    }
+  },
+  "34956__1787373900__4__1039": {
+    "time": "10:15 AM",
+    "audi": "SCREEN 4",
+    "total": 11,
+    "categories": {
+      "PLATINUM": {
+        "available": 11,
+        "total": 120,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 10,
+        "price": 295
+      }
+    }
+  },
+  "34956__1787382900__5__982": {
+    "time": "12:45 PM",
+    "audi": "SCREEN 5",
+    "total": 41,
+    "categories": {
+      "PLATINUM": {
+        "available": 41,
+        "total": 416,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 20,
+        "price": 295
+      }
+    }
+  },
+  "34956__1787385000__4__1040": {
+    "time": "01:20 PM",
+    "audi": "SCREEN 4",
+    "total": 9,
+    "categories": {
+      "PLATINUM": {
+        "available": 9,
+        "total": 120,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 10,
+        "price": 295
+      }
+    }
+  },
+  "34956__1787393700__5__983": {
+    "time": "03:45 PM",
+    "audi": "SCREEN 5",
+    "total": 36,
+    "categories": {
+      "PLATINUM": {
+        "available": 36,
+        "total": 416,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 20,
+        "price": 295
+      }
+    }
+  },
+  "34956__1787396100__4__1041": {
+    "time": "04:25 PM",
+    "audi": "SCREEN 4",
+    "total": 2,
+    "categories": {
+      "PLATINUM": {
+        "available": 2,
+        "total": 120,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 10,
+        "price": 295
+      }
+    }
+  },
+  "34956__1787405400__5__984": {
+    "time": "07:00 PM",
+    "audi": "SCREEN 5",
+    "total": 1,
+    "categories": {
+      "PLATINUM": {
+        "available": 1,
+        "total": 416,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 20,
+        "price": 295
+      }
+    }
+  },
+  "34956__1787407200__2__1169": {
+    "time": "07:30 PM",
+    "audi": "SCREEN 2",
+    "total": 5,
+    "categories": {
+      "PLATINUM": {
+        "available": 5,
+        "total": 66,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 10,
+        "price": 295
+      }
+    }
+  },
+  "34956__1787416800__5__985": {
+    "time": "10:10 PM",
+    "audi": "SCREEN 5",
+    "total": 41,
+    "categories": {
+      "PLATINUM": {
+        "available": 41,
+        "total": 416,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 20,
+        "price": 295
+      }
+    }
+  },
+  "34956__1787418600__4__1069": {
+    "time": "10:40 PM",
+    "audi": "SCREEN 4",
+    "total": 12,
+    "categories": {
+      "PLATINUM": {
+        "available": 12,
+        "total": 120,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 10,
+        "price": 295
+      }
+    }
   }
 }
