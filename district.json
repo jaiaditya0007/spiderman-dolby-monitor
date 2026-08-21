@@ -434,12 +434,12 @@
     "total": 22,
     "categories": {
       "EXECUTIVE": {
-        "available": 21,
+        "available": 20,
         "total": 144,
         "price": 50
       },
       "SILVER": {
-        "available": 0,
+        "available": 1,
         "total": 173,
         "price": 125
       },
