@@ -460,7 +460,7 @@
     "time": "10:30 PM",
     "audi": "VIMAL 70MM",
     "theatre": "Vimal 70MM",
-    "total": 85,
+    "total": 82,
     "categories": {
       "EXECUTIVE": {
         "available": 27,
@@ -468,12 +468,12 @@
         "price": 50
       },
       "SILVER": {
-        "available": 11,
+        "available": 14,
         "total": 173,
         "price": 125
       },
       "GOLD": {
-        "available": 47,
+        "available": 41,
         "total": 502,
         "price": 175
       },
