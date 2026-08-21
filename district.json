@@ -257,10 +257,10 @@
   "34956__1787405400__5__984": {
     "time": "07:00 PM",
     "audi": "SCREEN 5",
-    "total": 1,
+    "total": 0,
     "categories": {
       "PLATINUM": {
-        "available": 1,
+        "available": 0,
         "total": 416,
         "price": 177
       },
@@ -274,10 +274,10 @@
   "34956__1787407200__2__1169": {
     "time": "07:30 PM",
     "audi": "SCREEN 2",
-    "total": 5,
+    "total": 0,
     "categories": {
       "PLATINUM": {
-        "available": 5,
+        "available": 0,
         "total": 66,
         "price": 177
       },
@@ -308,10 +308,10 @@
   "34956__1787418600__4__1069": {
     "time": "10:40 PM",
     "audi": "SCREEN 4",
-    "total": 12,
+    "total": 9,
     "categories": {
       "PLATINUM": {
-        "available": 12,
+        "available": 9,
         "total": 120,
         "price": 177
       },
