@@ -344,10 +344,10 @@
     "time": "11:30 AM",
     "audi": "VIMAL 70MM",
     "theatre": "Vimal 70MM",
-    "total": 2,
+    "total": 0,
     "categories": {
       "EXECUTIVE": {
-        "available": 2,
+        "available": 0,
         "total": 144,
         "price": 50
       },
