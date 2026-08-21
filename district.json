@@ -223,10 +223,10 @@
   "34956__1787393700__5__983": {
     "time": "03:45 PM",
     "audi": "SCREEN 5",
-    "total": 1,
+    "total": 0,
     "categories": {
       "PLATINUM": {
-        "available": 1,
+        "available": 0,
         "total": 416,
         "price": 177
       },
