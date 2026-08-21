@@ -344,10 +344,10 @@
     "time": "11:30 AM",
     "audi": "VIMAL 70MM",
     "theatre": "Vimal 70MM",
-    "total": 1,
+    "total": 0,
     "categories": {
       "EXECUTIVE": {
-        "available": 1,
+        "available": 0,
         "total": 144,
         "price": 50
       },
@@ -518,7 +518,7 @@
     "time": "08:00 AM",
     "audi": "VIMAL 70MM",
     "theatre": "Vimal 70MM",
-    "total": 1,
+    "total": 0,
     "categories": {
       "EXECUTIVE": {
         "available": 0,
@@ -526,7 +526,7 @@
         "price": 50
       },
       "SILVER": {
-        "available": 1,
+        "available": 0,
         "total": 173,
         "price": 125
       },
