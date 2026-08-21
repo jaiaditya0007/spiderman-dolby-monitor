@@ -321,5 +321,22 @@
         "price": 295
       }
     }
+  },
+  "34956__1787408100__2__1169": {
+    "time": "07:45 PM",
+    "audi": "SCREEN 2",
+    "total": 3,
+    "categories": {
+      "PLATINUM": {
+        "available": 3,
+        "total": 66,
+        "price": 177
+      },
+      "RECLINER": {
+        "available": 0,
+        "total": 10,
+        "price": 295
+      }
+    }
   }
 }
