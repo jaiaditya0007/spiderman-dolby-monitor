@@ -431,10 +431,10 @@
     "time": "06:55 PM",
     "audi": "VIMAL 70MM",
     "theatre": "Vimal 70MM",
-    "total": 15,
+    "total": 19,
     "categories": {
       "EXECUTIVE": {
-        "available": 12,
+        "available": 16,
         "total": 144,
         "price": 50
       },
