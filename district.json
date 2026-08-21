@@ -172,10 +172,10 @@
   "34956__1787373900__4__1039": {
     "time": "10:15 AM",
     "audi": "SCREEN 4",
-    "total": 11,
+    "total": 0,
     "categories": {
       "PLATINUM": {
-        "available": 11,
+        "available": 0,
         "total": 120,
         "price": 177
       },
