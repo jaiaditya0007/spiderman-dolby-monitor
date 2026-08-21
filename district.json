@@ -570,5 +570,34 @@
         "price": 235
       }
     }
+  },
+  "34956__1787477100__5842__6550": {
+    "date": "2026-08-23",
+    "time": "02:55 PM",
+    "audi": "VIMAL 70MM",
+    "theatre": "Vimal 70MM",
+    "total": 1,
+    "categories": {
+      "EXECUTIVE": {
+        "available": 0,
+        "total": 144,
+        "price": 50
+      },
+      "SILVER": {
+        "available": 0,
+        "total": 173,
+        "price": 125
+      },
+      "GOLD": {
+        "available": 1,
+        "total": 502,
+        "price": 175
+      },
+      "PLATINUM(RECLINERS)": {
+        "available": 0,
+        "total": 26,
+        "price": 235
+      }
+    }
   }
 }
