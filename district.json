@@ -431,7 +431,7 @@
     "time": "06:55 PM",
     "audi": "VIMAL 70MM",
     "theatre": "Vimal 70MM",
-    "total": 20,
+    "total": 19,
     "categories": {
       "EXECUTIVE": {
         "available": 17,
@@ -439,7 +439,7 @@
         "price": 50
       },
       "SILVER": {
-        "available": 1,
+        "available": 0,
         "total": 173,
         "price": 125
       },
@@ -460,7 +460,7 @@
     "time": "10:30 PM",
     "audi": "VIMAL 70MM",
     "theatre": "Vimal 70MM",
-    "total": 46,
+    "total": 55,
     "categories": {
       "EXECUTIVE": {
         "available": 3,
@@ -468,17 +468,17 @@
         "price": 50
       },
       "SILVER": {
-        "available": 14,
+        "available": 7,
         "total": 173,
         "price": 125
       },
       "GOLD": {
-        "available": 29,
+        "available": 38,
         "total": 502,
         "price": 175
       },
       "PLATINUM(RECLINERS)": {
-        "available": 0,
+        "available": 7,
         "total": 26,
         "price": 235
       }
