@@ -1,9 +1,9 @@
 name: District Vimal 70MM Seat Monitor
 
 on:
-  schedule:
+  #schedule:
     # Runs continuously every 6 hours
-    - cron: '0 */6 * * *'
+   #- cron: '0 */6 * * *'
   workflow_dispatch: # Allows manual trigger anytime from GitHub Actions tab
 
 concurrency:
