@@ -28,15 +28,13 @@
     "time": "09:30 PM",
     "total": 4,
     "rows": {
-      "SECOND CLASS: E": [
-        "34"
-      ],
       "SECOND CLASS: F": [
+        "15",
+        "16",
         "25"
       ],
       "SECOND CLASS: G": [
-        "10",
-        "22"
+        "10"
       ]
     }
   }
