@@ -26,7 +26,18 @@
   "3878": {
     "date": "20260923",
     "time": "09:30 PM",
-    "total": 0,
-    "rows": {}
+    "total": 6,
+    "rows": {
+      "UPPER BALCONY: P": [
+        "1"
+      ],
+      "UPPER BALCONY: C": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    }
   }
 }
