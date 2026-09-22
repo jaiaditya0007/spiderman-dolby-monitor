@@ -8,9 +8,9 @@ import subprocess
 from datetime import datetime
 
 # --- CONFIGURATION FOR DOOKUDU @ SUDARSHAN 35MM ---
-DATES = ["20260809"]
+DATES = ["20260923"]
 VENUE_CODE = "SUDA"                  # Sudarshan 35mm
-EVENT_CODE = "ET00006198"            # Dookudu
+EVENT_CODE = "ET00436621"            # Dookudu
 STATE_FILE = "state_dksd.json"
 NTFY_TOPIC = "dksdntf"
 MAX_RUNTIME_SECONDS = (5 * 3600) + (55 * 60) # 5 hrs 55 mins
