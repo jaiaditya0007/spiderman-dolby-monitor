@@ -26,13 +26,12 @@
   "3878": {
     "date": "20260923",
     "time": "09:30 PM",
-    "total": 2,
+    "total": 3,
     "rows": {
-      "SECOND CLASS: B": [
-        "3"
-      ],
-      "SECOND CLASS: G": [
-        "23"
+      "SECOND CLASS: F": [
+        "1",
+        "2",
+        "16"
       ]
     }
   }
