@@ -67,11 +67,9 @@
     "time": "06:15 PM",
     "total": 67,
     "rows": {
-      "UPPER BALCONY: J": [
-        "15"
-      ],
       "UPPER BALCONY: I": [
-        "31"
+        "31",
+        "32"
       ],
       "SECOND CLASS: E": [
         "1",
