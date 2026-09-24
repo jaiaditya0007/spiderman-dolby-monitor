@@ -65,11 +65,14 @@
   "3864": {
     "date": "20260924",
     "time": "06:15 PM",
-    "total": 67,
+    "total": 68,
     "rows": {
       "UPPER BALCONY: J": [
-        "16",
         "17"
+      ],
+      "UPPER BALCONY: I": [
+        "31",
+        "32"
       ],
       "SECOND CLASS: E": [
         "1",
