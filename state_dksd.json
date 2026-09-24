@@ -46,13 +46,16 @@
   "3863": {
     "date": "20260924",
     "time": "02:30 PM",
-    "total": 17,
+    "total": 18,
     "rows": {
       "UPPER BALCONY: I": [
         "18",
         "19",
         "20",
         "21"
+      ],
+      "UPPER BALCONY: H": [
+        "1"
       ],
       "SECOND CLASS: G": [
         "1",
@@ -74,8 +77,12 @@
   "3864": {
     "date": "20260924",
     "time": "06:15 PM",
-    "total": 67,
+    "total": 69,
     "rows": {
+      "UPPER BALCONY: I": [
+        "31",
+        "32"
+      ],
       "SECOND CLASS: E": [
         "1",
         "2",
@@ -154,8 +161,12 @@
   "3865": {
     "date": "20260924",
     "time": "10:00 PM",
-    "total": 29,
+    "total": 31,
     "rows": {
+      "UPPER BALCONY: F": [
+        "27",
+        "28"
+      ],
       "SECOND CLASS: F": [
         "1",
         "2",
