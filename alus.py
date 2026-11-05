@@ -324,7 +324,7 @@ def main():
                         
                         msg = (
                             f"[{newly_unblocked_count}] BND DOLBY.\n"
-                            f"{rows_str} rows unblocked for #SpiderManBrandNewDay at ALLU Cinemas Dolby Screen.\n\n"
+                            f"{rows_str} rows unblocked for #Ramayana at ALLU Cinemas Dolby Screen.\n\n"
                             f"{human_date}, {s_time}"
                         )
                         trigger_ntfy(msg)
