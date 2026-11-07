@@ -1,0 +1,31 @@
+{
+  "35344__1794069000__1170__2246232": {
+    "date": "2026-09-23",
+    "time": "10:00 PM",
+    "audi": "GANGA LASER",
+    "theatre": "Ganga Laser (Dilsukhnagar)",
+    "total": 184,
+    "categories": {
+      "EXECUTIVE CLASS": {
+        "available": 2,
+        "total": 102,
+        "price": 50
+      },
+      "SILVER CLASS": {
+        "available": 39,
+        "total": 102,
+        "price": 150
+      },
+      "GOLD CLASS": {
+        "available": 143,
+        "total": 572,
+        "price": 175
+      },
+      "PLATINUM(RECLINERS)": {
+        "available": 0,
+        "total": 25,
+        "price": 235
+      }
+    }
+  }
+}
