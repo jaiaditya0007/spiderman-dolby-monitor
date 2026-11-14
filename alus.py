@@ -10,7 +10,7 @@ from datetime import datetime
 # --- CONFIGURATION FOR ALLU CINEMAS ---
 DATES = ["20261114","20261115"]
 VENUE_CODE = "ALUC"                  # ALLU Cinemas, Kokapet
-EVENT_CODE = "ET00451914"            # Spider-Man: Brand New Day
+EVENT_CODE = "ET00523252"            # Spider-Man: Brand New Day
 STATE_FILE = "state_alus.json"
 NTFY_TOPIC = "alusdolby"
 MAX_RUNTIME_SECONDS = (5 * 3600) + (55 * 60) # 5 hours 55 mins
